@@ -20,7 +20,7 @@ fn longestWidth(items: [][]const u8) usize {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     const allocator = gpa.allocator();
 
     var mesh: freebsd.gmesh = .{};
