@@ -45,7 +45,7 @@ pub fn main() !void {
     defer mountpoints.deinit();
 
     const namesWidth = longestWidth(names.items);
-    const sizesWidth = longestWidth(types.items);
+    const sizesWidth = longestWidth(sizes.items);
     const roWidth = longestWidth(readonly.items);
     const typesWidth = longestWidth(types.items);
     const mountpointsWidth = longestWidth(mountpoints.items);
@@ -57,7 +57,7 @@ pub fn main() !void {
         mountpoints.items,
     ) |name, size, ro, type_, mountpoint| {
         print("{s[0]: <[1]} ", .{ name, namesWidth });
-        print("{s[0]: >[1]} ", .{ size, sizesWidth + 2 });
+        print("{s[0]: >[1]} ", .{ size, sizesWidth + 1 });
         print("{s[0]: >[1]} ", .{ ro, roWidth });
         print("{s[0]: <[1]} ", .{ type_, typesWidth });
         print("{s[0]: <[1]} ", .{ mountpoint, mountpointsWidth });
