@@ -4,6 +4,8 @@ const mem = std.mem;
 const print = std.debug.print;
 
 const freebsd = @import("cimports.zig").freebsd;
+
+const common = @import("common.zig");
 const device = @import("device.zig");
 const Column = @import("column.zig").Column;
 
@@ -27,7 +29,9 @@ pub fn main() !void {
     var data = try device.Data.init(allocator, &mesh);
     defer data.deinit();
 
-    const column = try Column.init(allocator, &data);
+    var flags = common.Flags.init();
+    flags.parse();
+    const column = try Column.init(allocator, &data, &flags);
 
     const names = try column.name();
     defer names.deinit();

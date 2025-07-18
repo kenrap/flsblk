@@ -4,6 +4,8 @@ const mem = std.mem;
 const print = std.debug.print;
 
 const freebsd = @import("cimports.zig").freebsd;
+
+const common = @import("common.zig");
 const iterator = @import("iterator.zig");
 
 pub const Data = struct {
@@ -103,7 +105,7 @@ fn digits(num: usize) usize {
     return count;
 }
 
-pub fn storageSize(allocator: mem.Allocator, byteSize: usize) ![]const u8 {
+pub fn storageSize(allocator: mem.Allocator, byteSize: usize, flags: *const common.Flags) ![]const u8 {
     const storageUnits = [_][]const u8{
         "",
         "K",
@@ -117,6 +119,6 @@ pub fn storageSize(allocator: mem.Allocator, byteSize: usize) ![]const u8 {
         // For now, let's not worry about what comes after Yottabytes
         // until the distant future.
     };
-    const unit = digits(byteSize) / 4;
+    const unit = if (!flags.bytes) digits(byteSize) / 4 else 0;
     return try fmt.allocPrint(allocator, "{}{s}", .{ byteSize / std.math.pow(usize, 1024, unit), storageUnits[unit] });
 }

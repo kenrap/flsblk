@@ -4,6 +4,8 @@ const mem = std.mem;
 const print = std.debug.print;
 
 const freebsd = @import("cimports.zig").freebsd;
+
+const common = @import("common.zig");
 const device = @import("device.zig");
 
 pub const Column = struct {
@@ -14,8 +16,9 @@ pub const Column = struct {
     maps: [2]std.StringArrayHashMap([][]const u8),
     diskTypes: [2][]const u8,
     dirPaths: [2][]const u8,
+    flags: *const common.Flags,
 
-    pub fn init(allocator: mem.Allocator, data: *const device.Data) !Self {
+    pub fn init(allocator: mem.Allocator, data: *const device.Data, flags: *const common.Flags) !Self {
         return .{
             .allocator = allocator,
             .data = data,
@@ -31,6 +34,7 @@ pub const Column = struct {
                 "/dev",
                 "/dev/zvol",
             },
+            .flags = flags,
         };
     }
 
@@ -78,9 +82,9 @@ pub const Column = struct {
             while (iter.next()) |entry| {
                 const disk = entry.key_ptr.*;
                 const parts: [][]const u8 = entry.value_ptr.*;
-                try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, disk }))));
+                try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, disk })), self.flags));
                 for (parts) |part| {
-                    try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, part }))));
+                    try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, part })), self.flags));
                 }
             }
         }
