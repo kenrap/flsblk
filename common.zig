@@ -6,18 +6,24 @@ const print = std.debug.print;
 pub const Flags = struct {
     const Self = @This();
 
+    allocator: mem.Allocator,
+    args: [][:0]u8,
     bytes: bool,
 
-    pub fn init() Self {
+    pub fn init(allocator: mem.Allocator) !Self {
         return .{
+            .allocator = allocator,
+            .args = try std.process.argsAlloc(allocator),
             .bytes = false,
         };
     }
 
+    pub fn deinit(self: *Self) void {
+        std.process.argsFree(self.allocator, self.args);
+    }
+
     pub fn parse(self: *Self) void {
-        var args = std.process.args();
-        _ = args.skip();
-        while (args.next()) |arg| {
+        for (self.args[1..]) |arg| {
             if (arg[0] == '-' and arg[1] != '-') {
                 self.shortOptions(arg[1..]);
             }

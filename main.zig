@@ -29,7 +29,8 @@ pub fn main() !void {
     var data = try device.Data.init(allocator, &mesh);
     defer data.deinit();
 
-    var flags = common.Flags.init();
+    var flags = try common.Flags.init(allocator);
+    defer flags.deinit();
     flags.parse();
     const column = try Column.init(allocator, &data, &flags);
 
