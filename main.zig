@@ -9,16 +9,6 @@ const common = @import("common.zig");
 const device = @import("device.zig");
 const Column = @import("column.zig").Column;
 
-fn longestWidth(items: [][]const u8) usize {
-    var result: usize = 0;
-    for (items) |item| {
-        const deviceLen = item.len;
-        if (deviceLen > result)
-            result = deviceLen;
-    }
-    return result;
-}
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     const allocator = gpa.allocator();
@@ -31,24 +21,24 @@ pub fn main() !void {
 
     var args = try common.Args.init(allocator);
     defer args.deinit();
+
     const column = try Column.init(allocator, &data, &args);
 
-    const names = try column.name();
+    var names, const namesWidth = try column.name();
     defer names.deinit();
-    const sizes = try column.size();
+
+    var sizes, const sizesWidth = try column.size();
     defer sizes.deinit();
-    const readonly = try column.readonly();
+
+    var readonly, const roWidth = try column.readonly();
     defer readonly.deinit();
-    const types = try column.type_();
+
+    var types, const typesWidth = try column.type_();
     defer types.deinit();
-    const mountpoints = try column.mountpoints();
+
+    var mountpoints, const mountpointsWidth = try column.mountpoints();
     defer mountpoints.deinit();
 
-    const namesWidth = longestWidth(names.items);
-    const sizesWidth = longestWidth(sizes.items);
-    const roWidth = longestWidth(readonly.items);
-    const typesWidth = longestWidth(types.items);
-    const mountpointsWidth = longestWidth(mountpoints.items);
     for (
         names.items,
         sizes.items,

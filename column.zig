@@ -8,6 +8,16 @@ const freebsd = @import("cimports.zig").freebsd;
 const common = @import("common.zig");
 const device = @import("device.zig");
 
+fn longestWidth(items: [][]const u8) usize {
+    var result: usize = 0;
+    for (items) |item| {
+        const deviceLen = item.len;
+        if (deviceLen > result)
+            result = deviceLen;
+    }
+    return result;
+}
+
 pub const Column = struct {
     const Self = @This();
 
@@ -38,7 +48,7 @@ pub const Column = struct {
         };
     }
 
-    pub fn name(self: *const Self) !std.ArrayList([]const u8) {
+    pub fn name(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
         var result = std.ArrayList([]const u8).init(self.allocator);
         try result.append("NAME");
         for (self.maps) |map| {
@@ -55,10 +65,10 @@ pub const Column = struct {
                 try result.append(try fmt.allocPrint(self.allocator, "└─{s}", .{parts[parts.len - 1][partNameBegin..]}));
             }
         }
-        return result;
+        return .{ result, longestWidth(result.items) };
     }
 
-    pub fn type_(self: *const Self) !std.ArrayList([]const u8) {
+    pub fn type_(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
         var result = std.ArrayList([]const u8).init(self.allocator);
         try result.append("TYPE");
         for (self.maps, self.diskTypes) |map, diskType| {
@@ -71,10 +81,10 @@ pub const Column = struct {
                 }
             }
         }
-        return result;
+        return .{ result, longestWidth(result.items) };
     }
 
-    pub fn size(self: *const Self) !std.ArrayList([]const u8) {
+    pub fn size(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
         var result = std.ArrayList([]const u8).init(self.allocator);
         try result.append("SIZE");
         for (self.maps, self.dirPaths) |map, dirPath| {
@@ -88,7 +98,7 @@ pub const Column = struct {
                 }
             }
         }
-        return result;
+        return .{ result, longestWidth(result.items) };
     }
 
     fn getMountOnName(self: *const Self, mntbufs: []freebsd.struct_statfs, devicePath: []const u8) ![]const u8 {
@@ -103,7 +113,7 @@ pub const Column = struct {
         return "";
     }
 
-    pub fn mountpoints(self: *const Self) !std.ArrayList([]const u8) {
+    pub fn mountpoints(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
         var result = std.ArrayList([]const u8).init(self.allocator);
         var mntbuf: [*c]freebsd.struct_statfs = undefined;
         const n: usize = @intCast(freebsd.getmntinfo(&mntbuf, freebsd.MNT_NOWAIT));
@@ -121,10 +131,10 @@ pub const Column = struct {
                 }
             }
         }
-        return result;
+        return .{ result, longestWidth(result.items) };
     }
 
-    pub fn readonly(self: *const Self) !std.ArrayList([]const u8) {
+    pub fn readonly(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
         var result = std.ArrayList([]const u8).init(self.allocator);
         try result.append("RO");
         for (self.maps, self.dirPaths) |map, dirPath| {
@@ -154,6 +164,6 @@ pub const Column = struct {
                 }
             }
         }
-        return result;
+        return .{ result, longestWidth(result.items) };
     }
 };
