@@ -63,9 +63,9 @@ pub const Column = struct {
                 var partNameBegin: usize = 0;
                 for (parts[0 .. parts.len - 1]) |part| {
                     partNameBegin = mem.lastIndexOf(u8, part, std.fs.path.basename(disk)) orelse 0;
-                    try result.append(self.allocator, try fmt.allocPrint(self.allocator, "├─{s}", .{part[partNameBegin..]}));
+                    try result.append(self.allocator, try fmt.allocPrint(self.allocator, "|-{s}", .{part[partNameBegin..]}));
                 }
-                try result.append(self.allocator, try fmt.allocPrint(self.allocator, "└─{s}", .{parts[parts.len - 1][partNameBegin..]}));
+                try result.append(self.allocator, try fmt.allocPrint(self.allocator, "|_{s}", .{parts[parts.len - 1][partNameBegin..]}));
             }
         }
         return .{ result, longestWidth(result.items) };
