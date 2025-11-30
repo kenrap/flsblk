@@ -5,9 +5,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const exe = b.addExecutable(.{
         .name = "flsblk",
-        .root_source_file = b.path("main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("main.zig"),
+            .optimize = optimize,
+            .target = target,
+        }),
     });
     exe.linkSystemLibrary("geom");
     exe.linkSystemLibrary("util");

@@ -67,7 +67,7 @@ pub const Data = struct {
     }
 
     fn collectPartNames(allocator: mem.Allocator, mesh: *const freebsd.gmesh, name: []const u8) !std.ArrayList([]const u8) {
-        var list = std.ArrayList([]const u8).init(allocator);
+        var list = try std.ArrayList([]const u8).initCapacity(allocator, 8);
         var partsIter = iterator.GeomQuery("PART").init(mesh);
         while (partsIter.next()) |gclass| {
             var geoms = iterator.GClass(freebsd.gclass, freebsd.ggeom).init(gclass);
@@ -76,7 +76,7 @@ pub const Data = struct {
                 while (providers.next()) |provider| {
                     const providerName = mem.span(provider.lg_name);
                     if (name.len <= providerName.len and mem.eql(u8, name, providerName[0..name.len])) {
-                        try list.append(providerName);
+                        try list.append(allocator, providerName);
                     }
                 }
             }

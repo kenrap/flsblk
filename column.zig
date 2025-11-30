@@ -49,35 +49,38 @@ pub const Column = struct {
     }
 
     pub fn name(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
-        var result = std.ArrayList([]const u8).init(self.allocator);
-        try result.append("NAME");
+        var result = try std.ArrayList([]const u8).initCapacity(self.allocator, 8);
+        try result.append(self.allocator, "NAME");
         for (self.maps) |map| {
             var iter = map.iterator();
             while (iter.next()) |entry| {
                 const disk = entry.key_ptr.*;
-                try result.append(disk);
+                try result.append(self.allocator, disk);
                 const parts: [][]const u8 = entry.value_ptr.*;
+                if (parts.len == 0) {
+                    continue;
+                }
                 var partNameBegin: usize = 0;
                 for (parts[0 .. parts.len - 1]) |part| {
                     partNameBegin = mem.lastIndexOf(u8, part, std.fs.path.basename(disk)) orelse 0;
-                    try result.append(try fmt.allocPrint(self.allocator, "├─{s}", .{part[partNameBegin..]}));
+                    try result.append(self.allocator, try fmt.allocPrint(self.allocator, "├─{s}", .{part[partNameBegin..]}));
                 }
-                try result.append(try fmt.allocPrint(self.allocator, "└─{s}", .{parts[parts.len - 1][partNameBegin..]}));
+                try result.append(self.allocator, try fmt.allocPrint(self.allocator, "└─{s}", .{parts[parts.len - 1][partNameBegin..]}));
             }
         }
         return .{ result, longestWidth(result.items) };
     }
 
     pub fn type_(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
-        var result = std.ArrayList([]const u8).init(self.allocator);
-        try result.append("TYPE");
+        var result = try std.ArrayList([]const u8).initCapacity(self.allocator, 8);
+        try result.append(self.allocator, "TYPE");
         for (self.maps, self.diskTypes) |map, diskType| {
             var iter = map.iterator();
             while (iter.next()) |entry| {
-                try result.append(diskType);
+                try result.append(self.allocator, diskType);
                 const parts: [][]const u8 = entry.value_ptr.*;
                 for (parts) |_| {
-                    try result.append("part");
+                    try result.append(self.allocator, "part");
                 }
             }
         }
@@ -85,16 +88,16 @@ pub const Column = struct {
     }
 
     pub fn size(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
-        var result = std.ArrayList([]const u8).init(self.allocator);
-        try result.append("SIZE");
+        var result = try std.ArrayList([]const u8).initCapacity(self.allocator, 8);
+        try result.append(self.allocator, "SIZE");
         for (self.maps, self.dirPaths) |map, dirPath| {
             var iter = map.iterator();
             while (iter.next()) |entry| {
                 const disk = entry.key_ptr.*;
                 const parts: [][]const u8 = entry.value_ptr.*;
-                try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, disk })), self.args));
+                try result.append(self.allocator, try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, disk })), self.args));
                 for (parts) |part| {
-                    try result.append(try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, part })), self.args));
+                    try result.append(self.allocator, try device.storageSize(self.allocator, try device.mediaSize(try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, part })), self.args));
                 }
             }
         }
@@ -114,20 +117,20 @@ pub const Column = struct {
     }
 
     pub fn mountpoints(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
-        var result = std.ArrayList([]const u8).init(self.allocator);
+        var result = try std.ArrayList([]const u8).initCapacity(self.allocator, 8);
         var mntbuf: [*c]freebsd.struct_statfs = undefined;
         const n: usize = @intCast(freebsd.getmntinfo(&mntbuf, freebsd.MNT_NOWAIT));
         const mntbufs = mntbuf[0..n];
-        try result.append("MOUNTPOINTS");
+        try result.append(self.allocator, "MOUNTPOINTS");
         for (self.maps, self.dirPaths) |map, dirPath| {
             var iter = map.iterator();
             while (iter.next()) |entry| {
                 const diskPath = try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, entry.key_ptr.* });
-                try result.append(try self.getMountOnName(mntbufs, diskPath));
+                try result.append(self.allocator, try self.getMountOnName(mntbufs, diskPath));
                 const parts: [][]const u8 = entry.value_ptr.*;
                 for (parts) |part| {
                     const partPath = try fmt.allocPrint(self.allocator, "{s}/{s}", .{ dirPath, part });
-                    try result.append(try self.getMountOnName(mntbufs, partPath));
+                    try result.append(self.allocator, try self.getMountOnName(mntbufs, partPath));
                 }
             }
         }
@@ -135,8 +138,8 @@ pub const Column = struct {
     }
 
     pub fn readonly(self: *const Self) !struct { std.ArrayList([]const u8), usize } {
-        var result = std.ArrayList([]const u8).init(self.allocator);
-        try result.append("RO");
+        var result = try std.ArrayList([]const u8).initCapacity(self.allocator, 8);
+        try result.append(self.allocator, "RO");
         for (self.maps, self.dirPaths) |map, dirPath| {
             var iter = map.iterator();
             while (iter.next()) |entry| {
@@ -148,7 +151,7 @@ pub const Column = struct {
                         ro = "1";
                     }
                 }
-                try result.append(ro);
+                try result.append(self.allocator, ro);
 
                 const parts: [][]const u8 = entry.value_ptr.*;
                 for (parts) |part| {
@@ -160,7 +163,7 @@ pub const Column = struct {
                             ro = "1";
                         }
                     }
-                    try result.append(ro);
+                    try result.append(self.allocator, ro);
                 }
             }
         }

@@ -25,19 +25,19 @@ pub fn main() !void {
     const column = try Column.init(allocator, &data, &args);
 
     var names, const namesWidth = try column.name();
-    defer names.deinit();
+    defer names.deinit(allocator);
 
     var sizes, const sizesWidth = try column.size();
-    defer sizes.deinit();
+    defer sizes.deinit(allocator);
 
     var readonly, const roWidth = try column.readonly();
-    defer readonly.deinit();
+    defer readonly.deinit(allocator);
 
     var types, const typesWidth = try column.type_();
-    defer types.deinit();
+    defer types.deinit(allocator);
 
     var mountpoints, const mountpointsWidth = try column.mountpoints();
-    defer mountpoints.deinit();
+    defer mountpoints.deinit(allocator);
 
     for (
         names.items,
@@ -46,11 +46,11 @@ pub fn main() !void {
         types.items,
         mountpoints.items,
     ) |name, size, ro, type_, mountpoint| {
-        print("{s[0]: <[1]} ", .{ name, namesWidth });
-        print("{s[0]: >[1]} ", .{ size, sizesWidth + 1 });
-        print("{s[0]: >[1]} ", .{ ro, roWidth });
-        print("{s[0]: <[1]} ", .{ type_, typesWidth });
-        print("{s[0]: <[1]} ", .{ mountpoint, mountpointsWidth });
+        print("{s:<[1]} ", .{ name, namesWidth });
+        print("{s:>[1]} ", .{ size, sizesWidth + 1 });
+        print("{s:>[1]} ", .{ ro, roWidth });
+        print("{s:<[1]} ", .{ type_, typesWidth });
+        print("{s:<[1]} ", .{ mountpoint, mountpointsWidth });
         print("\n", .{});
     }
 }
